@@ -1,0 +1,11 @@
+body {
+  margin: 0;
+}
+#map
+{
+    width: auto;
+    height: 100vh;
+}
+.navbar-custom {
+    background-color: #67ea94;
+}

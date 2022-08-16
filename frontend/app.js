@@ -1,0 +1,128 @@
+const util = require('util');
+var $ = require("jquery");
+require('bootstrap');
+var L = require('leaflet');
+require('leaflet-fullscreen');
+require('leaflet.locatecontrol');
+require('leaflet-providers');
+const functions = require('./functions.js');
+
+var markersCurrent = [];
+
+var map = L.map('map', {
+  fullscreenControl: true
+});
+
+L.control.locate().addTo(map);
+
+// Set the position and zoom level of the map
+map.setView([47.70, 13.35], 7);
+
+var osm = L.tileLayer.provider('OpenStreetMap.Mapnik', {
+  noWrap: true,
+});
+
+var otm = L.tileLayer.provider('OpenTopoMap', {
+  noWrap: true,
+});
+
+var mmltausta = L.tileLayer.wms('https://tiles.kartat.kapsi.fi/taustakartta?', {
+  noWrap: true,
+  attribution: 'Map &copy; <a href="https://www.maanmittauslaitos.fi/en">National Land Survey of Finland</a>&nbsp;<a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a>',
+  layers: 'taustakartta'
+});
+
+var mmltopo = L.tileLayer.wms('https://tiles.kartat.kapsi.fi/peruskartta?', {
+  noWrap: true,
+  attribution: 'Map &copy; <a href="https://www.maanmittauslaitos.fi/en">National Land Survey of Finland</a>&nbsp;<a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a>',
+  layers: 'peruskartta'
+});
+
+var mmlaerial = L.tileLayer.wms('https://tiles.kartat.kapsi.fi/ortokuva?', {
+  noWrap: true,
+  attribution: 'Map &copy; <a href="https://www.maanmittauslaitos.fi/en">National Land Survey of Finland</a>&nbsp;<a href="https://creativecommons.org/licenses/by/4.0/">CC-BY 4.0</a>',
+  layers: 'ortokuva'
+});
+
+var precip = new L.TileLayer('https://tilecache.rainviewer.com/v2/radar/' + parseInt(Date.now() / 600000) * 600 + '/256/{z}/{x}/{y}/2/1_1.png', {
+  tileSize: 256,
+  opacity: 0.4,
+  transparent: true,
+  attribution: '<a href="https://rainviewer.com" target="_blank">rainviewer.com</a>'
+});
+
+var basemaps = {
+  "OpenStreetMap": osm,
+  "OpenTopoMap": otm,
+  "Finnish Land Survey Background": mmltausta,
+  "Finnish Land Survey Topo": mmltopo,
+  "Finnish Land Survey Aerial": mmlaerial,
+};
+
+var overlays = {
+  "Precipitation": precip
+}
+
+L.control.layers(basemaps, overlays).addTo(map);
+
+startMap = Object.keys(basemaps)[0];
+basemaps[startMap].addTo(map);
+
+function updateMarkers(markers) {
+  for (var id in markers) {
+    var uid = markers[id][0];
+    var oldIndex = markersCurrent.findIndex(row => row.includes(uid));
+    if ( oldIndex != -1 ) {                                                     // Point exists?
+      lat = markers[id][1].lat;
+      lon = markers[id][1].lon;
+      last = markers[id][1].lastHeard;
+      batt = markers[id][1].battery;
+      olat = markersCurrent[oldIndex][1].lat;
+      olon = markersCurrent[oldIndex][1].lon;
+      olast = markersCurrent[oldIndex][1].lastHeard;
+      obatt = markersCurrent[oldIndex][1].battery;
+      if ( (lat != olat) || (lon != olon) || (last != olast) || (batt != obatt) ) {                                   // Point has changed position?
+        $(".leaflet-marker-icon.marker-"+uid).remove();
+        $(".leaflet-marker-shadow.marker-"+uid).remove();
+        var marker = functions.newMarker(uid,markers[id][1]).addTo(map);
+        marker._icon.classList.add("marker-" + markers[id][0]);
+      }
+    } else {                                                                    // Point does not yet exist
+      var marker = functions.newMarker(uid,markers[id][1]).addTo(map);
+      marker._icon.classList.add("marker-" + markers[id][0]);
+
+    }
+  }
+  for (var id in markersCurrent) {                                           // Check local storage for objects that weren't in the last message any more
+    var uid = markersCurrent[id][0];
+    var newIndex = markers.findIndex(row => row.includes(uid));
+    if (newIndex == -1) {
+      $(".leaflet-marker-icon.marker-"+uid).remove();
+      $(".leaflet-marker-shadow.marker-"+uid).remove();
+    }
+  }
+}
+
+var reloadJSON = setInterval(function() {
+  fetch("/list")
+    .then(function(response) {
+      response.json().then(function(data) {
+        updateMarkers(data);
+        markersCurrent = data;
+      });
+    });
+}, 1000);
+
+function resizeMap() {
+  var navHeight = $("#nav").outerHeight();
+  var windowHeight = $(window).height();
+  $("#map").height(windowHeight-navHeight);
+}
+
+$(document).ready(function(){
+  resizeMap();
+});
+
+$(window).resize(function(){
+  resizeMap();
+});

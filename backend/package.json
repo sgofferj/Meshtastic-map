@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "version": "0.0.1",
+  "description": "TAK-WEB-MAP backend",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Stefan Gofferje",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@vidterra/tak.js": "^0.0.6",
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "module-alias": "^2.2.2",
+    "node-cache": "^5.1.2",
+    "protobufjs": "^6.11.2",
+    "pug": "^3.0.2",
+    "reconnect-tls": "^0.0.2",
+    "serialport": "^9.2.1",
+    "tls": "^0.0.1"
+  }
+}

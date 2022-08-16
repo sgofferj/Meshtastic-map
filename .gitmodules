@@ -1,0 +1,3 @@
+[submodule "backend/Meshtastic-protobufs"]
+	path = backend/Meshtastic-protobufs
+	url = https://github.com/meshtastic/Meshtastic-protobufs
