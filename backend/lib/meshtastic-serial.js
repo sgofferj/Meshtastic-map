@@ -7,6 +7,7 @@ const peerInfo = root.lookupType('ToRadio.PeerInfo');
 const fromRadio = root.lookupType('FromRadio');
 const position = root.lookupType('Position');
 const user = root.lookupType('User');
+//const reply = root.lookupType('Reply');
 
 let sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -51,6 +52,18 @@ module.exports.decodeFromRadio = (data) => {
     }
   }
 }
+
+/*
+module.exports.decodeReply = (buffer) => {
+  try {
+    const message = position.decode(buffer);
+    const reply = position.toObject(message);
+    return reply;
+  } catch (e) {
+    console.log(e);
+  }
+}
+*/
 
 module.exports.decodePosition = (buffer) => {
   try {

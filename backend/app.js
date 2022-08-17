@@ -35,6 +35,7 @@ myPort.on('open', () => {
 });
 
 myPort.on('data', (data) => {
+  //console.log(data);
   var reply = meshtastic.decodeFromRadio(data);
   if (reply !== undefined) {
     if (reply.hasOwnProperty('rebooted')) {
@@ -51,17 +52,26 @@ myPort.on('data', (data) => {
           console.log(rxTime, "from", reply.from.toString(16), "to", reply.to.toString(16), "Message:", decoded)
           break;
         case 3:
-          var buffer = reply.decoded.payload
-          var decoded = meshtastic.decodePosition(buffer);
-          time = (decoded.hasOwnProperty('time')) ? new Date(decoded.time * 1000).toISOString() : "????-??-??T??:??:??.???Z";
-          objects.storeUserPosition(reply.from.toString(16),decoded);
-          console.log(rxTime, "from", reply.from.toString(16), "to", reply.to.toString(16), "Location:", decoded.latitudeI, decoded.longitudeI, decoded.altitude, time)
+          if (reply.decoded.hasOwnProperty("payload")) {
+            var buffer = reply.decoded.payload
+            var decoded = meshtastic.decodePosition(buffer);
+              time = (decoded.hasOwnProperty('time')) ? new Date(decoded.time * 1000).toISOString() : "????-??-??T??:??:??.???Z";
+              objects.storeUserPosition(reply.from.toString(16),decoded);
+              console.log(rxTime, "from", reply.from.toString(16), "to", reply.to.toString(16), "Location:", decoded.latitudeI, decoded.longitudeI, decoded.altitude, time)
+            } else {
+              console.log(rxTime, "from", reply.from.toString(16), "to", reply.to.toString(16), "Location request")
+            }
           break;
         case 4:
           var buffer = reply.decoded.payload
           var decoded = meshtastic.decodeUser(buffer);
           objects.storeUserInfo(reply.from.toString(16),decoded);
           console.log(rxTime, "from", reply.from.toString(16), "to", reply.to.toString(16), "Userinfo:", decoded.id, decoded.longName, decoded.shortName, decoded.hwModel)
+          break;
+        case 32:
+          console.log(rxTime, "from", reply.from.toString(16), "to", reply.to.toString(16), "Reply app")
+        default:
+          console.log(reply);
           break;
       }
     } else if (reply.hasOwnProperty('nodeInfo')) {
@@ -71,7 +81,6 @@ myPort.on('data', (data) => {
       console.log(time,"Nodeinfo:", meshtastic.decodeMac(reply.user.macaddr), reply.user.id, reply.user.longName, reply.user.shortName);
 
     } else {
-      console.log(reply);
     }
   }
 });

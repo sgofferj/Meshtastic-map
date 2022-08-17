@@ -73,7 +73,7 @@ module.exports.storeNodeInfo = (id,data) => {
       "lon": data.position.longitudeI/1e7,
       "alt": data.position.altitude,
       "battery": (data.position.hasOwnProperty("batteryLevel")) ? data.position.batteryLevel : null,
-      "lastHeard": new Date(data.lastHeard*1000),
+      "lastHeard": new Date(Date.now())
     }
     success = objectCache.set(id, obj);
   } catch (e) {
